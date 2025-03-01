@@ -1,99 +1,95 @@
-document.addEventListener('DOMContentLoaded', () => {
-    let networkData = JSON.parse(localStorage.getItem('networkData')) || {
-        participantId: `user-${Math.random().toString(36).substr(2, 9)}`,
-        totalContributions: 0,
-        lastUpdated: new Date().toISOString(),
-        actions: []
-    };
-
-    // URL에서 공유된 데이터 불러오기
-    const urlParams = new URLSearchParams(window.location.search);
-    const sharedData = urlParams.get('data');
-    let sharedActions = [];
-    if (sharedData) {
+document.addEventListener('DOMContentLoaded', async () => {
+    let web3;
+    if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
         try {
-            sharedActions = JSON.parse(decodeURIComponent(atob(sharedData))).actions || [];
-            console.log('Shared actions loaded:', sharedActions);
-        } catch (e) {
-            console.error('Invalid shared data:', e);
-        }
-    }
-
-    function updateNetworkDisplay() {
-        const totalContributionsElement = document.getElementById('totalContributions');
-        const actionCountElement = document.getElementById('actionCount');
-        const historyBody = document.getElementById('historyBody');
-
-        if (!totalContributionsElement || !actionCountElement || !historyBody) {
-            console.error('Required elements not found for updateNetworkDisplay');
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                    chainId: '0x118ad', // 71901 in hex
+                    chainName: 'Dongnet',
+                    rpcUrls: ['http://localhost:8545'], // 배포 시 공용 IP로 변경
+                    nativeCurrency: { name: 'Dongnet', symbol: 'DNT', decimals: 18 }
+                }]
+            });
+        } catch (error) {
+            console.error('MetaMask connection failed:', error);
+            alert('Please connect MetaMask to Dongnet!');
             return;
         }
-
-        totalContributionsElement.textContent = networkData.totalContributions.toFixed(2);
-        actionCountElement.textContent = networkData.actions.length;
-
-        historyBody.innerHTML = '';
-
-        // 내 기록 표시
-        networkData.actions.forEach(action => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${action.timestamp}</td>
-                <td>${action.description} (You)</td>
-            `;
-            historyBody.appendChild(row);
-        });
-
-        // 공유된 다른 사용자 기록 표시
-        sharedActions.forEach(action => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${action.timestamp}</td>
-                <td>${action.description} (Shared)</td>
-            `;
-            historyBody.appendChild(row);
-        });
-    }
-
-    function contributeToNetwork() {
-        const startTime = Date.now();
-        let contributionValue = Math.random() * 10;
-        for (let i = 0; i < 100000; i++) {
-            contributionValue += Math.sin(i) * 0.01;
-        }
-        const timeTaken = Date.now() - startTime;
-
-        networkData.totalContributions += contributionValue;
-        networkData.lastUpdated = new Date().toISOString();
-        networkData.actions.push({
-            timestamp: new Date().toLocaleString(),
-            description: `Contributed ${contributionValue.toFixed(2)} units (${timeTaken}ms)`,
-            contributionValue: contributionValue
-        });
-
-        if (networkData.actions.length > 50) {
-            networkData.actions.shift();
-        }
-
-        localStorage.setItem('networkData', JSON.stringify(networkData));
-        updateNetworkDisplay();
-
-        console.log(`Contribution: ${contributionValue.toFixed(2)} units (${timeTaken}ms)`);
-    }
-
-    // 버튼 설정
-    const contributeButton = document.getElementById('contributeButton');
-    const shareButton = document.getElementById('shareButton');
-
-    if (!contributeButton || !shareButton) {
-        console.error('Buttons not found');
+    } else {
+        alert('Please install MetaMask to use Dongnet!');
         return;
     }
 
-    contributeButton.addEventListener('click', contributeToNetwork);
+    const contractAddress = '0x610d2ec9f017600b449cea92066aa75dbcb561fe'; // 새로운 배포 주소
+    const contractAbi = [
+        {"inputs":[],"name":"contribute","outputs":[],"stateMutability":"payable","type":"function"},
+        {"inputs":[],"name":"getContributions","outputs":[{"components":[{"internalType":"address","name":"contributor","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"uint256","name":"timestamp","type":"uint256"}],"internalType":"struct DongnetContribution.Contribution[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+        {"inputs":[],"name":"totalContributions","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},
+        {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"contributor","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Contributed","type":"event"}
+    ];
+    const contract = new web3.eth.Contract(contractAbi, contractAddress);
 
-    shareButton.addEventListener('click', () => {
-        const jsonData = JSON.stringify(networkData);
+    const contributeButton = document.getElementById('contributeButton');
+    const shareButton = document.getElementById('shareButton');
+    const totalContributionsElement = document.getElementById('totalContributions');
+    const actionCountElement = document.getElementById('actionCount');
+    const historyBody = document.getElementById('historyBody');
+
+    if (!contributeButton || !shareButton || !totalContributionsElement || !actionCountElement || !historyBody) {
+        console.error('Required elements not found');
+        return;
+    }
+
+    async function updateNetworkDisplay() {
+        try {
+            const total = await contract.methods.totalContributions().call();
+            const contributions = await contract.methods.getContributions().call();
+
+            totalContributionsElement.textContent = web3.utils.fromWei(total, 'ether');
+            actionCountElement.textContent = contributions.length;
+            historyBody.innerHTML = '';
+
+            contributions.forEach(c => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(c.timestamp * 1000).toLocaleString()}</td>
+                    <td>${web3.utils.fromWei(c.value, 'ether')} DNT</td>
+                `;
+                historyBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Failed to update display:', error);
+        }
+    }
+
+    contributeButton.addEventListener('click', async () => {
+        const accounts = await web3.eth.getAccounts();
+        const value = web3.utils.toWei('1', 'ether'); // 1 DNT 기여
+        try {
+            await contract.methods.contribute().send({ from: accounts[0], value: value });
+            console.log('Contribution successful: 1 DNT');
+            updateNetworkDisplay();
+        } catch (error) {
+            console.error('Contribution failed:', error);
+            alert('Failed to contribute. Check MetaMask and console.');
+        }
+    });
+
+    shareButton.addEventListener('click', async () => {
+        const contributions = await contract.methods.getContributions().call();
+        const shareData = {
+            participantId: web3.utils.toHex(await web3.eth.getChainId()),
+            totalContributions: web3.utils.fromWei(await contract.methods.totalContributions().call(), 'ether'),
+            actions: contributions.map(c => ({
+                timestamp: new Date(c.timestamp * 1000).toLocaleString(),
+                description: `${web3.utils.fromWei(c.value, 'ether')} DNT`
+            }))
+        };
+        const jsonData = JSON.stringify(shareData);
         const encodedData = btoa(encodeURIComponent(jsonData));
         const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encodedData}`;
         navigator.clipboard.writeText(shareUrl).then(() => {
@@ -101,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Share URL:', shareUrl);
         }).catch(err => {
             console.error('Failed to copy URL:', err);
-            alert('Failed to copy URL. Please copy it manually: ' + shareUrl);
+            alert('Failed to copy URL. Copy manually: ' + shareUrl);
         });
     });
 
