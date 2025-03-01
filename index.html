@@ -19,6 +19,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dongnet - Network Participation</title>
     <link rel="icon" type="image/png" href="https://scmlpt.github.io/Dongpt/logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -145,70 +146,27 @@
             background-color: #1a1a1a;
         }
         @media (max-width: 768px) {
-            .navbar-menu {
-                gap: 10px;
-            }
-            .navbar-item a {
-                font-size: 0.9rem;
-            }
-            .logo {
-                font-size: clamp(1.2rem, 5vw, 2.5rem);
-            }
-            .tagline {
-                font-size: clamp(0.7rem, 2vw, 1.2rem);
-            }
-            #contributeButton, #shareButton {
-                font-size: clamp(0.6rem, 1.5vw, 0.9rem);
-                padding: 1.5vh 3vw;
-            }
-            .container {
-                padding: 10px 10px;
-                max-width: 85%;
-            }
+            .navbar-menu { gap: 10px; }
+            .navbar-item a { font-size: 0.9rem; }
+            .logo { font-size: clamp(1.2rem, 5vw, 2.5rem); }
+            .tagline { font-size: clamp(0.7rem, 2vw, 1.2rem); }
+            #contributeButton, #shareButton { font-size: clamp(0.6rem, 1.5vw, 0.9rem); padding: 1.5vh 3vw; }
+            .container { padding: 10px 10px; max-width: 85%; }
         }
         @media (max-width: 480px) {
-            .navbar {
-                flex-direction: column;
-                padding: 10px;
-            }
-            .navbar-menu {
-                flex-direction: column;
-                gap: 5px;
-                margin-top: 10px;
-            }
-            .navbar-item a {
-                font-size: 0.8rem;
-            }
-            .logo {
-                font-size: clamp(1rem, 5vw, 2rem);
-            }
-            .tagline {
-                font-size: clamp(0.6rem, 2.5vw, 1rem);
-            }
-            #contributeButton, #shareButton {
-                font-size: clamp(0.6rem, 2vw, 0.8rem);
-                padding: 2vh 4vw;
-            }
-            .container {
-                padding: 5px 5px;
-                max-width: 90%;
-            }
+            .navbar { flex-direction: column; padding: 10px; }
+            .navbar-menu { flex-direction: column; gap: 5px; margin-top: 10px; }
+            .navbar-item a { font-size: 0.8rem; }
+            .logo { font-size: clamp(1rem, 5vw, 2rem); }
+            .tagline { font-size: clamp(0.6rem, 2.5vw, 1rem); }
+            #contributeButton, #shareButton { font-size: clamp(0.6rem, 2vw, 0.8rem); padding: 2vh 4vw; }
+            .container { padding: 5px 5px; max-width: 90%; }
         }
         @media (max-width: 360px) {
-            .logo {
-                font-size: clamp(0.9rem, 4vw, 1.8rem);
-            }
-            .tagline {
-                font-size: clamp(0.5rem, 2vw, 0.9rem);
-            }
-            #contributeButton, #shareButton {
-                font-size: clamp(0.5rem, 1.8vw, 0.7rem);
-                padding: 2vh 4vw;
-            }
-            .container {
-                padding: 5px 5px;
-                max-width: 95%;
-            }
+            .logo { font-size: clamp(0.9rem, 4vw, 1.8rem); }
+            .tagline { font-size: clamp(0.5rem, 2vw, 0.9rem); }
+            #contributeButton, #shareButton { font-size: clamp(0.5rem, 1.8vw, 0.7rem); padding: 2vh 4vw; }
+            .container { padding: 5px 5px; max-width: 95%; }
         }
     </style>
 </head>
@@ -236,7 +194,7 @@
             <div class="tagline">Join the Network Revolution</div>
             <div class="network-participation">
                 <button id="contributeButton">Contribute to Network</button>
-                <p>Total Contributions: <span id="totalContributions">0</span></p>
+                <p>Total Contributions: <span id="totalContributions">0</span> DNT</p>
                 <p>Action Count: <span id="actionCount">0</span></p>
                 <table id="historyTable">
                     <thead>
@@ -251,10 +209,6 @@
             </div>
         </div>
     </div>
-
-    <script src="script.js" defer></script>
-</body>
-</html>
 
     <script src="script.js" defer></script>
 </body>
