@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 params: [{
                     chainId: '0x118ad', // 71901 in hex
                     chainName: 'Dongnet',
-                    rpcUrls: ['http://localhost:8545'], // 배포 시 공용 IP로 변경
+                    rpcUrls: ['http://3.86.160.93:8545'], // 공용 IP로 변경
                     nativeCurrency: { name: 'Dongnet', symbol: 'DNT', decimals: 18 }
                 }]
             });
